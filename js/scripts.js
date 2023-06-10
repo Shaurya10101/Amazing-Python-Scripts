@@ -34,32 +34,26 @@ document.addEventListener('DOMContentLoaded', function (event) {
   let search = document.getElementById('search')
   search.addEventListener('keydown', Search)
 
-  let copyButtons = document.getElementsByClassName('copy-code')
-  for (let i = 0; i < copyButtons.length; i++) {
-    let button = copyButtons[i]
-    button.addEventListener('click', function () {
-      let filePath = this.getAttribute('data-file')
-      copyCodeToFile(filePath)
-    })
-  }
+  let copyCodeButton = divHTML.querySelector('.copy-code-btn');
+  copyCodeButton.addEventListener('click', copyCode);
 
   function populateCards(scriptNumber, scriptDetails) {
+    let cardHolder = document.getElementById('card-holder')
+    let isHidden = scriptNumber <= 20 ? '' : 'hidden'
 
-  let divHTML = `<div class="col-sm-6 col-md-3 ${isHidden} ">
-                    <div class="card shadow">
-                        <div class="card-body">
-                            <h5 class="card-title">${scriptDetails['name']}</h5>
-                            <p class="card-text">${scriptDetails['summary']}</p>
-                            <p>- <a href="https://github.com/${scriptDetails['author']}">${scriptDetails['author']}</a></p><br>
-                            <a href="https://github.com/avinashkranjan/Amazing-Python-Scripts/blob/master/${scriptDetails['folder']}/${scriptDetails['file']}" class="btn btn-primary">Take Me</a>
-                            <button class="btn btn-secondary copy-code-btn" data-file="${scriptDetails['file']}">Copy Code</button>
-                        </div>
-                    </div>
-                </div>`
+    let divHTML = `<div class="col-sm-6 col-md-3 ${isHidden} ">
+                  <div class="card shadow">
+                      <div class="card-body">
+                          <h5 class="card-title">${scriptDetails['name']}</h5>
+                          <p class="card-text">${scriptDetails['summary']}</p>
+                          <p>- <a href="https://github.com/${scriptDetails['author']}">${scriptDetails['author']}</a></p><br>
+                          <a href="https://github.com/avinashkranjan/Amazing-Python-Scripts/blob/master/${scriptDetails['folder']}/${scriptDetails['file']}" class="btn btn-primary">Take Me</a>
+                          <button class="btn btn-primary copy-code-btn" data-file-url="https://github.com/avinashkranjan/Amazing-Python-Scripts/blob/master/${scriptDetails['folder']}/${scriptDetails['file']}">Copy code</button>
+                      </div>
+                  </div>
+              </div>`;
 
-  cardHolder.innerHTML += divHTML
-}
-
+  }
 
   function More() {
     loadMore.style.display = 'none'
@@ -69,22 +63,32 @@ document.addEventListener('DOMContentLoaded', function (event) {
       cards[count].style.display = 'block'
     }
   }
-  function copyCodeToFile(filePath) {
-    let request = new XMLHttpRequest()
-    request.open('GET', filePath)
-    request.onreadystatechange = function() {
-      if (request.readyState === 4 && request.status === 200) {
-        let code = request.responseText
-        navigator.clipboard.writeText(code)
-          .then(function() {
-            console.log('Code copied to clipboard!')
-          })
-          .catch(function(error) {
-            console.error('Failed to copy code:', error)
-          })
-      }
-    }
-    request.send()
+  function copyCode(event) {
+    let fileUrl = event.target.dataset.fileUrl;
+    fetch(fileUrl)
+      .then(response => response.text())
+      .then(code => {
+        // Create a temporary textarea element to hold the code
+        const textarea = document.createElement('textarea');
+        textarea.value = code;
+        document.body.appendChild(textarea);
+  
+        // Copy the code from the textarea to the clipboard
+        textarea.select();
+        document.execCommand('copy');
+  
+        // Remove the temporary textarea
+        document.body.removeChild(textarea);
+  
+        // Provide visual feedback to the user
+        event.target.textContent = 'Code copied!';
+        setTimeout(() => {
+          event.target.textContent = 'Copy code';
+        }, 2000);
+      })
+      .catch(error => {
+        console.error('Error copying code:', error);
+      });
   }
 
   function Search() {
